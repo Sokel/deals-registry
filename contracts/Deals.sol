@@ -38,9 +38,15 @@ contract Deals {
     mapping (uint => uint256) blockedBalance;
 
     mapping (address => uint[]) dealsIndex;
+    // also know as Fees Address
+    address collector;
+    // in % of succesfuly sold computations
+    uint fee;
 
     function Deals(TSCToken _token){
         token = _token;
+        fee = 5;
+        collector = msg.sender;
     }
 
     function OpenDeal(address _hub, address _client, uint256 _specHash, uint256 _price, uint _workTime){
@@ -77,13 +83,17 @@ contract Deals {
             // Closing deal
             if (now > deals[id].endTime) {
                 // After endTime
-                require(token.transfer(deals[id].hub, deals[id].price));
+                uint feeAmount = PayComission(deals[id].price);
+                blockedBalance[id] = blockedBalance[id].sub(feeAmount);
+                require(token.transfer(deals[id].hub, (deals[id].price - feeAmount)));
                 blockedBalance[id] = blockedBalance[id].sub(deals[id].price);
             } else {
                 require(msg.sender == deals[id].client);
                 // Before endTime
                 var paidAmount = (now - deals[id].startTime) * (deals[id].price / deals[id].workTime);
-                require(token.transfer(deals[id].hub, paidAmount));
+                feeAmount = PayComission(paidAmount);
+                blockedBalance[id] = blockedBalance[id].sub(feeAmount);
+                require(token.transfer(deals[id].hub, paidAmount - feeAmount));
                 blockedBalance[id] = blockedBalance[id].sub(paidAmount);
                 require(token.transfer(deals[id].client, deals[id].price - paidAmount));
                 blockedBalance[id] = blockedBalance[id].sub(deals[id].price - paidAmount);
@@ -103,6 +113,25 @@ contract Deals {
         } else {
             revert();
         }
+    }
+
+    // set public if you want to bite morons 4 money
+    function PayComission(uint price) internal returns (uint){
+        uint amount = (price * fee) / 100;
+        require(token.transfer(collector, amount));
+        return amount;
+    }
+
+    function SetComission(uint percentage) public returns (bool){
+      require(msg.sender == collector);
+      fee = percentage;
+      return true;
+    }
+
+    function SetFeesAddress(address _feesAddress) public returns (bool){
+      require(msg.sender == collector);
+      collector = _feesAddress;
+      return true;
     }
 
     function GetDealInfo(uint dealIndex) constant returns (uint specHach, address client, address hub, uint price, uint startTime, uint workTime, uint endTIme, uint status){
