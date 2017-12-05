@@ -2,6 +2,7 @@ pragma solidity ^0.4.15;
 
 
 import "./TSCToken.sol";
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
 contract Deals is Ownable{
@@ -105,9 +106,9 @@ contract Deals is Ownable{
         }
     }
 
-    function ChangeTokenAddress(TSCToken _newAddr) onlyOwner public returns (TSCToken token){
-      token = _newAddr;
-      return token;
+    function ChangeTokenAddress(address _newAddr) onlyOwner public returns (address){
+      token = TSCToken(_newAddr);
+      return _newAddr;
     }
 
     function GetDealInfo(uint dealIndex) constant returns (uint specHach, address client, address hub, uint price, uint startTime, uint workTime, uint endTIme, uint status){
