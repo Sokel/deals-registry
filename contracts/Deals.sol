@@ -1,14 +1,15 @@
 pragma solidity ^0.4.15;
 
 
-import "./TSCToken.sol";
+import 'zeppelin-solidity/contracts/token/ERC20.sol';
+import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
+import 'zeppelin-solidity/contracts/math/SafeMath.sol';
 
-
-contract Deals {
+contract Deals is Ownable{
 
     using SafeMath for uint256;
 
-    TSCToken token;
+    ERC20 token;
 
     uint constant STATUS_PENDING = 1;
     uint constant STATUS_ACCEPTED = 2;
@@ -39,7 +40,7 @@ contract Deals {
 
     mapping (address => uint[]) dealsIndex;
 
-    function Deals(TSCToken _token){
+    function Deals(ERC20 _token){
         token = _token;
     }
 
@@ -77,7 +78,7 @@ contract Deals {
             // Closing deal
             if (now > deals[id].endTime) {
                 // After endTime
-                require(token.transfer(deals[id].hub, deals[id].price));
+                require(token.transfer(deals[id].hub, (deals[id].price)));
                 blockedBalance[id] = blockedBalance[id].sub(deals[id].price);
             } else {
                 require(msg.sender == deals[id].client);
@@ -103,6 +104,11 @@ contract Deals {
         } else {
             revert();
         }
+    }
+
+    function ChangeTokenAddress(address _newAddr) onlyOwner public returns (address){
+      token = ERC20(_newAddr);
+      return _newAddr;
     }
 
     function GetDealInfo(uint dealIndex) constant returns (uint specHach, address client, address hub, uint price, uint startTime, uint workTime, uint endTIme, uint status){
