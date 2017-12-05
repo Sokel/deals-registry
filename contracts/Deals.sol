@@ -1,15 +1,15 @@
 pragma solidity ^0.4.15;
 
 
-import "./TSCToken.sol";
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
-
+import 'zeppelin-solidity/contracts/token/ERC20.sol';
+import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
+import 'zeppelin-solidity/contracts/math/SafeMath.sol';
 
 contract Deals is Ownable{
 
     using SafeMath for uint256;
 
-    TSCToken token;
+    ERC20 token;
 
     uint constant STATUS_PENDING = 1;
     uint constant STATUS_ACCEPTED = 2;
@@ -40,7 +40,7 @@ contract Deals is Ownable{
 
     mapping (address => uint[]) dealsIndex;
 
-    function Deals(TSCToken _token){
+    function Deals(ERC20 _token){
         token = _token;
     }
 
@@ -107,7 +107,7 @@ contract Deals is Ownable{
     }
 
     function ChangeTokenAddress(address _newAddr) onlyOwner public returns (address){
-      token = TSCToken(_newAddr);
+      token = ERC20(_newAddr);
       return _newAddr;
     }
 
